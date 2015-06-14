@@ -1,5 +1,5 @@
 """
-Epsilon-greedy n-armed bandit agent.
+n-armed bandit agents.
 
 Matthew Alger
 2015
@@ -7,7 +7,9 @@ Matthew Alger
 
 import numpy
 
+
 class NArmedBandit(object):
+
     """
     n-armed bandit agent.
     """
@@ -62,7 +64,9 @@ class NArmedBandit(object):
 
         return reward
 
+
 class GreedyNArmedBandit(NArmedBandit):
+
     """
     n-armed bandit adopting a greedy strategy after some number of random pulls.
     """
@@ -91,7 +95,9 @@ class GreedyNArmedBandit(NArmedBandit):
             return numpy.random.randint(self.n)
         return self.expectations.argmax()
 
+
 class EpsilonGreedyNArmedBandit(NArmedBandit):
+
     """
     n-armed bandit adopting an epsilon-greedy strategy.
     """
@@ -122,6 +128,58 @@ class EpsilonGreedyNArmedBandit(NArmedBandit):
             return numpy.random.randint(self.n)
         return self.expectations.argmax()
 
+
+class GibbsNArmedBandit(NArmedBandit):
+
+    """
+    n-armed bandit using a Gibbs distribution to decide what action to take.
+    """
+
+    def __init__(self, n, t):
+        """
+        n: Number of bandit arms. int.
+        t: Temperature of the Gibbs distribution.
+        -> GibbsNArmedBandit
+        """
+
+        # Temperature parameter of the Gibbs distribution.
+        self.t = t
+
+        super().__init__(n)
+
+    def choose_arm(self):
+        """
+        Return which number arm to pull. Arms which the bandit thinks will give
+        better rewards will be more likely to be pulled, according to the Gibbs
+        distribution.
+
+        -> Arm pulled. int in [0, n).
+        """
+
+        return numpy.random.multinomial(1,
+                                        self.softmax(self.expectations)
+                                        ).argmax()
+
+    def softmax(self, energies):
+        """
+        Return an array of probabilities corresponding to energies, with higher
+        energies corresponding to higher probabilities according to the Gibbs
+        distribution.
+
+        energies: Array of numbers corresponding to output probabilities.
+                  [float].
+        -> Probabilities. [float].
+        """
+
+        # Unnormalised probabilities.
+        probabilities = numpy.exp(energies/self.t)
+
+        # Normalisation constant (partition function).
+        Z = probabilities.sum()
+
+        return probabilities/Z
+
+
 def test_bandit(bandit, plays, rewards):
     """
     Test a bandit.
@@ -133,9 +191,9 @@ def test_bandit(bandit, plays, rewards):
     """
 
     # Function to retreive noisy rewards - Gaussians with means of the rewards.
-    noisy_rewards = lambda: numpy.random.multivariate_normal(
-                                rewards,
-                                numpy.identity(len(rewards)))
+    def noisy_rewards():
+        return numpy.random.multivariate_normal(rewards,
+                                                numpy.identity(len(rewards)))
 
     # Train the bandit over a number of plays.
     received_rewards = numpy.fromiter((bandit.train(noisy_rewards())
@@ -143,42 +201,3 @@ def test_bandit(bandit, plays, rewards):
                                       float)
 
     return received_rewards
-
-def run_bandit_tests():
-    """
-    Runs bandit tests to replicate the experiment in Section 2.2 of Sutton and
-    Barto's Reinforcement Learning: An Introduction.
-    """
-
-    import matplotlib.pyplot as plt
-
-    n = 10
-    iterations = 1000
-    k = 0
-    e = 0.1
-
-    trials = 1000
-
-    g_received_rewards = numpy.zeros(iterations)
-    eg_received_rewards = numpy.zeros(iterations)
-    eg2_received_rewards = numpy.zeros(iterations)
-
-    for t in range(trials):
-        rewards = list(range(n))
-
-        g_bandit = GreedyNArmedBandit(n, k)
-        eg_bandit = EpsilonGreedyNArmedBandit(n, e)
-        eg2_bandit = EpsilonGreedyNArmedBandit(n, e/10)
-
-        g_received_rewards += test_bandit(g_bandit, iterations, rewards)
-        eg_received_rewards += test_bandit(eg_bandit, iterations, rewards)
-        eg2_received_rewards += test_bandit(eg2_bandit, iterations, rewards)
-
-    g_received_rewards /= trials
-    eg_received_rewards /= trials
-    eg2_received_rewards /= trials
-
-    plt.plot(g_received_rewards)
-    plt.plot(eg_received_rewards)
-    plt.plot(eg2_received_rewards)
-    plt.show()
