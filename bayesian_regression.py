@@ -59,15 +59,16 @@ def make_data(N, M):
     xs = np.linspace(0, r, N)
     ys = np.sin(xs-r//2) + np.random.normal(0, size=(N,))
     xs = np.reshape(xs, xs.shape + (1,))
-    feature_matrix = np.concatenate([xs**m for m in range(0, M)], axis=1)
+    feature_matrix = np.concatenate([
+        xs**m for m in range(0, M)], axis=1)
     return xs, feature_matrix, ys
 
 if __name__ == '__main__':
     N = 500
-    M = 10
+    M = 4
     br = BayesianRegression1D(M)
     plt.ion()
-    for i in range(100):
+    for i in range(20):
         xs, feature_matrix, targets = make_data(N, M)
         br.train(feature_matrix, targets)
         # plot_gaussian(br.prior[0], br.prior[1], (1, 2))
