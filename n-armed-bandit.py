@@ -157,14 +157,14 @@ def run_bandit_tests():
     k = 0
     e = 0.1
 
-    trials = 1000
+    trials = 100
 
     g_received_rewards = numpy.zeros(iterations)
     eg_received_rewards = numpy.zeros(iterations)
     eg2_received_rewards = numpy.zeros(iterations)
 
     for t in range(trials):
-        rewards = list(range(n))
+        rewards = numpy.zeros(n)
 
         g_bandit = GreedyNArmedBandit(n, k)
         eg_bandit = EpsilonGreedyNArmedBandit(n, e)
