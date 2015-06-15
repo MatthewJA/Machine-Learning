@@ -68,16 +68,32 @@ class RecurrentNeuralNetwork(object):
 
         return np.asarray(inputs), np.asarray(targets), np.asarray(outputs)
 
-    def train(self, xs, iterations):
+    def train(self, xs, iterations, learning_rate, momentum):
         """
         xs: Input vectors.
-        iterations: Number of times to run the backpropagation algorithm.
+        iterations: Number of times to run the training algorithm.
         """
 
-        for i in range(iterations):
-            inputs, targets, outputs = self.run(xs)
-            error = targets - outputs
-            
+        # Forward propagation.
+        inputs, targets, outputs = self.run(xs)
+
+        # Back propagation for the past matrices.
+        errors = []
+        # Output layer...
+        errors.append((outputs[-1] - targets[-1]) *
+            outputs[-1] * (1 - outputs[-1]))
+        # Other layers...
+        for layer in range(xs.shape[0]-2, -1, -1):
+            errors.append(self.W_past.T.dot(errors[-1]) *
+                outputs[layer] * (1 - outputs[layer]))
+        errors.reverse()
+        # Partials...
+        partials = []
+        for layer in range(0, len(outputs)-1):
+            partials.append(errors[layer+1].dot(outputs[layer].T))
+        # Gradient descent...
+        self.W_past -= learning_rate * (
+            sum(partials)/len(partials) + momentum * self.W_past)
 
 def one_of_k_encode(string):
     """
@@ -115,4 +131,4 @@ if __name__ == '__main__':
     input_string = "hello"
     input_data, encoding = one_of_k_encode(input_string)
     rnn = RecurrentNeuralNetwork(len(encoding), 3, len(encoding))
-    rnn.train(input_data, 2)
+    rnn.train(input_data, 2, 0.1, 0.1)
