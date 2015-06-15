@@ -64,15 +64,15 @@ def make_data(N, M):
     return xs, feature_matrix, ys
 
 if __name__ == '__main__':
-    N = 500
+    N = 10
     M = 4
     br = BayesianRegression1D(M)
     plt.ion()
-    for i in range(20):
+    for i in range(200):
         xs, feature_matrix, targets = make_data(N, M)
         br.train(feature_matrix, targets)
-        # plot_gaussian(br.prior[0], br.prior[1], (1, 2))
         plt.cla()
-        plt.plot(xs, feature_matrix.dot(br.prior[0]), "ro")
-        plt.plot(xs, targets, "k+")
+        plot_gaussian(br.prior[0], br.prior[1], (1, 2))
+        # plt.plot(xs, feature_matrix.dot(br.prior[0]), "ro")
+        # plt.plot(xs, targets, "k+")
         plt.draw()
