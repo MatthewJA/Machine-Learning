@@ -61,10 +61,20 @@ class NeuralNetwork(object):
 
             # Gradient descent!
             for l in range(self.layers-1):
+                weight_change = 0
+                bias_change = 0
                 for n in range(data.shape[0]):
-                    self.weights[l] - self.learning_rate * (
+                    weight_change -= self.learning_rate * (
                         activations[l][n].reshape((self.structure[l], 1)).dot(deltas[l][n].reshape((1, deltas[l][n].shape[0]))) +
                         self.momentum * self.weights[l])
+                    bias_change -= self.learning_rate * deltas[l][n].reshape((1, deltas[l][n].shape[0]))
+
+                weight_change /= data.shape[0]
+                bias_change /= data.shape[0]
+                print("weights were", self.weights[l][0, 0])
+                self.weights[l] += weight_change
+                print("weights are", self.weights[l][0, 0])
+                self.biases[l] += bias_change
 
     def deltas(self, activations, targets):
         """
@@ -120,13 +130,19 @@ def make_data(N, M):
     return xs, ys
 
 if __name__ == '__main__':
-    N = 1000
-    structure = (1, 10, 1)
+    N = 100
+    structure = (1, 100, 1)
     nn = NeuralNetwork(structure, 0.2, 0)
-    xs, ys = make_data(N, structure[0])
-    nn.train(xs, ys, 100)
-    plt.plot(xs, nn.activations(xs)[-1])
-    plt.plot(xs, ys, "k+")
-    plt.show()
+    plt.ion()
+    for i in range(10):
+        xs, ys = make_data(N, structure[0])
+        ys -= ys.min()
+        ys /= ys.max() - ys.min()
+        xs /= 10
+        nn.train(xs, ys, 1)
+        plt.cla()
+        plt.plot(xs, nn.activations(xs)[-1])
+        plt.plot(xs, ys, "k+")
+        plt.draw()
+    # plt.show()
     # plt.cla()
-    # plt.draw()
