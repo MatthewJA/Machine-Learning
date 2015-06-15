@@ -5,7 +5,13 @@ Matthew Alger
 2015
 """
 
+import os
+
 import numpy
+
+
+IRIS_PATH = os.path.join(os.path.dirname(__file__), "iris.dat")
+
 
 def load_data(normalised=False, centred=False):
     """
@@ -17,17 +23,16 @@ def load_data(normalised=False, centred=False):
     -> Iris Plants Database. [[float]].
     """
 
-    with open("iris.dat") as f:
-        data = numpy.genfromtxt(f, delimiter=",")
+    data = numpy.genfromtxt(IRIS_PATH, delimiter=",")
 
-        if centred:
-            mean = data.sum(axis=0)/data.shape[0]
-            data -= mean
+    if centred:
+        mean = data.sum(axis=0)/data.shape[0]
+        data -= mean
 
-        if normalised:
-            smallest = data.min(axis=0)
-            largest = data.max(axis=0)
-            data -= smallest
-            data /= largest - smallest
+    if normalised:
+        smallest = data.min(axis=0)
+        largest = data.max(axis=0)
+        data -= smallest
+        data /= largest - smallest
 
-        return data
+    return data
