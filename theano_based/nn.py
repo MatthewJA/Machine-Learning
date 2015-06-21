@@ -110,7 +110,7 @@ class NeuralNetwork(object):
         for layer in range(len(self.structure)-1):
             w = self.weights[layer]
             b = self.biases[layer]
-            y = th.tensor.nnet.sigmoid(th.tensor.dot(outputs[-1], w) + b)
+            y = th.tensor.tanh(th.tensor.dot(outputs[-1], w) + b)
             outputs.append(y)
 
         return outputs[-1]
@@ -141,8 +141,8 @@ def main():
 
     import matplotlib.pyplot as plt
 
-    structure = (1, 10, 10, 1)
-    learning_rate = 0.1
+    structure = (1, 10, 1)
+    learning_rate = 0.01
     reg = 0.001
     N = 1000
     data = np.random.uniform(0, 1, size=(N, 1))
@@ -152,12 +152,15 @@ def main():
     targets /= targets.max() - targets.min()
 
     nn = NeuralNetwork(structure, learning_rate, reg)
-    trials = 500
-    batch_size = 5
+    trials = 1000
+    batch_size = 2
     for i in range(trials):
         debug_log("Training ({}/{})".format(i+1, trials))
         for j in range(0, N, batch_size):
             nn.train_once(data[j:j+batch_size, :], targets[j:j+batch_size, :])
+        permutation = np.random.permutation(data.shape[0])
+        data = data[permutation, :]
+        targets = targets[permutation, :]
 
     plt.plot(data, targets, 'k+')
     plt.plot(data, nn.predict(data), "ro")
